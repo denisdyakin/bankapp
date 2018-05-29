@@ -3,6 +3,7 @@ package ru.tinkoff.jdo;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "CUSTOMER")
@@ -13,6 +14,14 @@ public class Customer {
     @Column(name = "CONTACT_ID")
     @ApiModelProperty(notes = "The auto-generated id of customer")
     private Long contactId;
+
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL
+    )
+    @JoinColumn(name = "CONTACT_ID")
+    @OrderBy("DT_CREATED desc")
+    private List<Order> orders;
 
     public Customer() {
     }
@@ -27,6 +36,14 @@ public class Customer {
 
     public void setContactId(Long contactId) {
         this.contactId = contactId;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 
     @Override

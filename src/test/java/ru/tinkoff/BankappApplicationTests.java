@@ -1,20 +1,20 @@
 package ru.tinkoff;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tinkoff.exception.NoDataException;
-import ru.tinkoff.jdo.Customer;
+import ru.tinkoff.jdo.LatestOrderResponse;
 import ru.tinkoff.jdo.Order;
 import ru.tinkoff.service.BankServiceImpl;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.Month;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -24,37 +24,40 @@ public class BankappApplicationTests {
 	BankServiceImpl bankService;
 
 	@Test
-	public void bankServiceCustomerTest() {
-		Page<Customer> customers = bankService.findAllCustomers(PageRequest.of(0, 5));
-
-		Assert.assertEquals(3, customers.getContent().size());
+	@Transactional
+	public void bankServiceOrderNotFoundTest() {
+		try {
+			bankService.findLatestOrder(3L);
+		} catch (RuntimeException exception) {
+			assertEquals(exception.getMessage(), "Latest order for 3 wasn't found");
+			assertEquals(true, exception instanceof NoDataException);
+		}
 	}
 
 	@Test
 	@Transactional
-	public void bankServiceOrderTest() {
-
-		//no data test
+	public void bankServiceCustomerNotExistTest() {
 		try {
 			bankService.findLatestOrder(10L);
 		} catch (RuntimeException exception) {
-			Assert.assertEquals(true, exception instanceof NoDataException);
+			assertEquals(exception.getMessage(), "Customer 10 is not exist");
+			assertEquals(true, exception instanceof NoDataException);
 		}
+	}
 
-		//find latestOrder
+	@Test
+	@Transactional
+	public void bankServiceLatestOrderTest() {
 		Order expectedOrder = new Order();
 		expectedOrder.setId(4L);
-		expectedOrder.setCreatedDate(new Date(1520715602000L));
+		expectedOrder.setCreatedDate(LocalDateTime.of(2018, Month.MARCH, 11, 0, 0, 2));
 		expectedOrder.setProductName("smf");
 
-		Customer expectedCustomer = new Customer(2L);
-
-		Order orderOfCustomer = bankService.findLatestOrder(expectedCustomer.getContactId());
-		Customer customer = orderOfCustomer.getCustomer();
-		Assert.assertEquals(expectedOrder.getId(), orderOfCustomer.getId());
-		Assert.assertEquals(expectedOrder.getCreatedDate().getTime(), orderOfCustomer.getCreatedDate().getTime());
-		Assert.assertEquals(expectedOrder.getProductName(), orderOfCustomer.getProductName());
-		Assert.assertEquals(expectedCustomer.getContactId(), customer.getContactId());
+		LatestOrderResponse orderOfCustomer = bankService.findLatestOrder(2L);
+		assertEquals(Long.valueOf(2), orderOfCustomer.getContactId());
+		assertEquals(expectedOrder.getId(), orderOfCustomer.getId());
+		assertEquals(expectedOrder.getCreatedDate(), orderOfCustomer.getCreatedDate());
+		assertEquals(expectedOrder.getProductName(), orderOfCustomer.getProductName());
 	}
 
 }

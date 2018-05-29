@@ -1,12 +1,9 @@
 package ru.tinkoff.jdo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ORDERS")
@@ -14,27 +11,19 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "APPLICATION_ID", nullable = false)
+    @Column(name = "APPLICATION_ID")
     @ApiModelProperty(notes = "The auto-generated id of order")
     private Long id;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "DT_CREATED", nullable = false)
+    @Column(name = "DT_CREATED")
     @ApiModelProperty(notes = "The data of order's creation")
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     @Column(name = "PRODUCT_NAME")
     @ApiModelProperty(notes = "The name of order's product")
     private String productName;
 
-    @Column(name = "CONTACT_ID", insertable = false, updatable = false, nullable = false)
-    @ApiModelProperty(notes = "The id of order's owner")
-    private Long contactId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CONTACT_ID", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnore
     private Customer customer;
 
     public Order() {
@@ -48,14 +37,6 @@ public class Order {
         this.id = id;
     }
 
-    public Date getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
-    }
-
     public String getProductName() {
         return productName;
     }
@@ -64,13 +45,14 @@ public class Order {
         this.productName = productName;
     }
 
-    public Long getContactId() {
-        return contactId;
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
     }
 
-    public void setContactId(Long contactId) {
-        this.contactId = contactId;
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
+
 
     public Customer getCustomer() {
         return customer;
@@ -78,6 +60,29 @@ public class Order {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Order order = (Order) o;
+
+        if (id != null ? !id.equals(order.id) : order.id != null) return false;
+        if (createdDate != null ? !createdDate.equals(order.createdDate) : order.createdDate != null) return false;
+        if (productName != null ? !productName.equals(order.productName) : order.productName != null) return false;
+        return customer != null ? customer.equals(order.customer) : order.customer == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 0;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (productName != null ? productName.hashCode() : 0);
+        result = 31 * result + (customer != null ? customer.hashCode() : 0);
+        return result;
     }
 
     @Override
